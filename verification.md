@@ -64,3 +64,45 @@ These are proposals inferred from current repository behavior, not existing enfo
 18. **Define and test a monetary precision/rounding policy before using these calculations with real financial data.** **Repo fact:** `FinancialMovement.amount` is a `float` in `backend/app/routes.py`, totals use floating-point sums, and several backend outputs are rounded to two decimal places.
 19. **Treat the debugpy listener as development-only and restrict/remove its exposed port in production deployments.** **Repo fact:** `backend/Dockerfile` starts debugpy on `0.0.0.0:5678`, and `docker-compose.yml` publishes port `5678`.
 20. **Handle empty inputs explicitly in aggregation/facet helpers if they are reused with a source that can return no movements.** **Repo fact:** `build_metrics_facets()` in `backend/app/routes.py` reads `ordered[0]` and `ordered[-1]`, which fail for an empty list; the current seeded generator always returns 360 items.
+
+## Phase 3 — Implement and test repository rules
+
+### Rule files created
+
+The 20 proposed rules above were written to `.agents/rules/` as **draft** rule files, grouped by category. Each rule retains its concrete repo-fact rationale, and rule numbers match the Phase 2 list:
+
+| File | Rules |
+|---|---|
+| `.agents/rules/README.md` | Index; marks the set as DRAFT (inferred from repo behavior, not yet ratified) |
+| `.agents/rules/architecture-and-data-flow.md` | 1–4 |
+| `.agents/rules/naming-and-organization.md` | 5–6 |
+| `.agents/rules/testing.md` | 7–8 |
+| `.agents/rules/runtime-behavior-and-security.md` | 9–10, 19–20 |
+| `.agents/rules/dates-and-time-zones.md` | 11–12 |
+| `.agents/rules/api-validation-and-precision.md` | 16–18 |
+| `.agents/rules/documentation-and-developer-experience.md` | 13–14 |
+| `.agents/rules/agent-workflow.md` | 15 |
+
+Status note for rule 15: `.agents/rules/` now exists; `.agents/skills` and `memory-bank` remain absent.
+
+### Test cases added to exercise the testing rules
+
+New tests were added in the locations mandated by rules 7 and 8:
+
+- **Backend (`backend/tests/test_routes.py`), exercising rule 16:** `test_top_categories_accepts_limit_boundary_values` (`limit=1` and `limit=20` succeed), `test_top_categories_rejects_out_of_range_limit` (`limit=0` and `limit=21` return 422), `test_metrics_endpoint_rejects_invalid_enum_filter` (unknown `category` returns 422), and `test_alerts_rejects_negative_threshold` (`threshold=-0.1` returns 422).
+- **Frontend (`frontend/src/lib/financial-utils.test.ts`), exercising rule 8:** empty-input boundary tests — `computeKPIs([])` returns zeroed metrics, and `computeMonthlyData([])` returns an empty list (client-side echo of rule 20's empty-list concern).
+
+### Verification results
+
+| Check | Result |
+|---|---|
+| `python -m pytest tests/` (backend) | ✅ 19 passed (15 existing + 4 new) |
+| `npm test` (frontend, vitest) | ✅ 7 passed (5 existing + 2 new) |
+| `npm run lint` | ✅ clean |
+| `npm run build` | ✅ succeeds; pre-existing chunk-size warning (>500 kB) is unrelated to test changes |
+
+Process note: the first backend run failed with `NameError: payload` because the new tests were inserted using an anchor from a read truncated at line 100, which orphaned the final assertion of `test_b2b_endpoint_combines_new_filters` into a newly appended test. The assertion was restored to its original test and the stray line removed; the 19/19 pass reflects the corrected file.
+
+### Open items (unchanged by Phase 3)
+
+Phase 3 added rules and tests only; no product code was changed. The following remain open and are governed by their respective draft rules: hard-coded period label (rule 11), wildcard CORS (rule 10), debugpy port exposure (rule 19), missing `frontend/.env.example` referenced by README (rule 13), and the DRAFT status of the rule set itself.
