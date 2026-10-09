@@ -83,7 +83,7 @@ The 20 proposed rules above were written to `.agents/rules/` as **draft** rule f
 | `.agents/rules/documentation-and-developer-experience.md` | 13–14 |
 | `.agents/rules/agent-workflow.md` | 15 |
 
-Status note for rule 15: `.agents/rules/` now exists; `.agents/skills` and `memory-bank` remain absent.
+Status note for rule 15: `.agents/rules/`, `.agents/skills/`, and `memory-bank/` now all exist (the two latter created after Phase 3, superseding the "remain absent" note).
 
 ### Test cases added to exercise the testing rules
 
@@ -106,3 +106,24 @@ Process note: the first backend run failed with `NameError: payload` because the
 ### Open items (unchanged by Phase 3)
 
 Phase 3 added rules and tests only; no product code was changed. The following remain open and are governed by their respective draft rules: hard-coded period label (rule 11), wildcard CORS (rule 10), debugpy port exposure (rule 19), missing `frontend/.env.example` referenced by README (rule 13), and the DRAFT status of the rule set itself.
+
+## Phase 4 — Build project memory
+
+The two directories from Phase 2 that remained absent were created, completing the structure `AGENTS.md` expects:
+
+### memory-bank/ (project memory)
+
+Six files at the repository root, each dated and grounded in verifiable repo facts:
+
+- `projectbrief.md` and `productContext.md` — product overview, purpose, and deliberate design decisions
+- `techStack.md` — languages, frameworks, and tooling with versions from `package.json` and Dockerfiles
+- `activeContext.md` — what works, known gaps (mapped to rule numbers), and next priorities
+- `systemPatterns.md` and `projectstructure.md` — architecture, data flow, and annotated layout
+
+### .agents/skills/ (invocable procedures)
+
+Four skills under `/<skill-name>/SKILL.md`: `run-and-verify-stack`, `add-api-endpoint`, `add-dashboard-feature`, and `maintain-rules-and-verification`. Each declares a "When to use" trigger and operationalizes existing rules as ordered checklists with commands and known pitfalls — rules remain the binding constraints; skills document how to follow them.
+
+### Consistency updates
+
+Status notes claiming these directories were absent were corrected in `verification.md`, `.agents/rules/agent-workflow.md`, `memory-bank/techStack.md`, and `memory-bank/activeContext.md`.
