@@ -127,3 +127,24 @@ Four skills under `/<skill-name>/SKILL.md`: `run-and-verify-stack`, `add-api-end
 ### Consistency updates
 
 Status notes claiming these directories were absent were corrected in `verification.md`, `.agents/rules/agent-workflow.md`, `memory-bank/techStack.md`, and `memory-bank/activeContext.md`.
+
+## APPLYING SPEC-DRIVEN DEVELOPMENT
+### Phase 1 — Map feature APIs and resolve contract wording
+
+**Verified:** 2026-10-15 against the local running backend (`GET /health` and `GET /docs` returned 200). Inspected `/openapi.json` and made representative GET requests for the three proposed dashboard features. Cross-checked frontend calls and proxy configuration in `frontend/src/App.tsx` and `frontend/vite.config.ts`.
+
+### Documentation updates
+
+- `docs/feature-endpoint-map.md` records endpoint paths, actual query parameter constraints/defaults, response model fields, representative response shapes, frontend fetch conventions, and the verification trail.
+- `docs/specs/01-dashboard-date-range-filter.md` clarifies that API dates are inclusive, facets supplies the unfiltered min/max dates, query strings omit blank values, and reversed ranges are rejected in the UI. The existing frontend convention uses the configured API base URL, `response.ok`, and JSON decoding.
+- `docs/specs/02-dashboard-anomaly-alerts.md` resolves `increase_ratio` as a ratio (multiply by 100 for display), specifies the inclusive `0.01`–`1.0` threshold bounds, strict comparison, preceding-three-period baseline, and date-range lookback behavior.
+- `docs/specs/03-b2b-b2c-comparison.md` resolves that `TopCategoryItem.total_amount` is category income only, not a group total; the selected strategy aggregates B2B/B2C movement lists to compute percentages and chart totals. Per-group categories come from that group's matching income movements, while facets provides global vocabulary only.
+
+### Current API mismatches retained as implementation requirements
+
+1. Alerts currently validates only `threshold >= 0`, and its baseline is the average of all earlier periods. Implementation must add the `0.01`–`1.0` bounds and rolling-three-period semantics.
+2. `GET /api/metrics/categories/top` returns `{category, operation_type, total_amount}` without group-total or percentage fields. The resolved spec therefore does not rely on this endpoint for the comparison view; it uses the B2B/B2C movement endpoints and client aggregation.
+3. `/api/metrics/facets` returns global `categories`, not a category list for each business type. The comparison view derives group-specific available categories from returned income movements.
+4. The current frontend has one fetch call, `GET /api/metrics`, and no multi-page routing; the comparison view spec calls for in-app navigation state, not a routing dependency.
+
+No application code was changed in this phase. Verification was contract/documentation-focused; test suites were not run because product code was not modified.
