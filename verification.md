@@ -128,8 +128,11 @@ Four skills under `/<skill-name>/SKILL.md`: `run-and-verify-stack`, `add-api-end
 
 Status notes claiming these directories were absent were corrected in `verification.md`, `.agents/rules/agent-workflow.md`, `memory-bank/techStack.md`, and `memory-bank/activeContext.md`.
 
-## APPLYING SPEC-DRIVEN DEVELOPMENT
-### Phase 1 — Map feature APIs and resolve contract wording
+## SPEC-DRIVEN DEVELOPMENT — FOUR-PHASE DOCUMENTATION WORK
+
+The following four commits document the proposed dashboard features from API discovery through the consolidated frontend contract. They are planning and contract artifacts; they do **not** mean that the three features have been implemented in the application.
+
+### Phase 1 — Explore the API and resolve contract wording (`4d79d31`)
 
 **Verified:** 2026-10-15 against the local running backend (`GET /health` and `GET /docs` returned 200). Inspected `/openapi.json` and made representative GET requests for the three proposed dashboard features. Cross-checked frontend calls and proxy configuration in `frontend/src/App.tsx` and `frontend/vite.config.ts`.
 
@@ -148,3 +151,33 @@ Status notes claiming these directories were absent were corrected in `verificat
 4. The current frontend has one fetch call, `GET /api/metrics`, and no multi-page routing; the comparison view spec calls for in-app navigation state, not a routing dependency.
 
 No application code was changed in this phase. Verification was contract/documentation-focused; test suites were not run because product code was not modified.
+
+### Phase 2 — Define TypeScript API and query types (`8c5669a`)
+
+- Added `frontend/specs/api-types.ts` for the facets, alerts, and top-category response payloads. It imports the shared movement-domain enums/types from `frontend/src/lib/financial-types.ts`, and keeps API payloads distinct from derived UI view models.
+- Added `frontend/specs/param-types.ts` for inclusive optional date bounds, alert threshold, and top-category query parameters. Comments record date format, defaults, and intended constraints.
+- These are feature-spec contract types, not runtime validation or types wired into the existing dashboard fetch flow. The response and query shapes were checked against the OpenAPI contract and the endpoint map; proposed feature requirements that differ from current API behavior are explicitly called out in the documentation.
+- No application code changed and no test suite was run for this documentation/type-definition phase.
+
+### Phase 3 — Specify dashboard component contracts (`26d906b`)
+
+- Added `frontend/specs/components.md` describing shared UI conventions and proposed component responsibilities for the date-range filter, home-page composition, anomaly alerts, and B2B/B2C comparison.
+- The component contracts specify draft-versus-applied filter behavior, API request ownership, loading/error/empty states, data aggregation responsibilities, and Spanish user-facing copy. They also preserve the chosen comparison strategy: aggregate income movement lists rather than depending on the top-category endpoint for group totals or percentages.
+- This file is a component-level implementation plan, not a set of implemented React components. No application code changed and no test suite was run.
+
+### Phase 4 — Consolidate frontend data contracts (`2a7c4c1`)
+
+- Added `frontend/specs/README.md` as the frontend specs index and cross-feature contract reference. It links the three product specs, endpoint map, shared domain types, API response types, query types, and component contracts.
+- It consolidates endpoint/query usage, request serialization and error-handling conventions, API-versus-derived-data boundaries, and edge cases for all three features. It also records the selected endpoint strategy and requirements where proposed behavior intentionally exceeds the current backend contract.
+- This phase is documentation-only; it does not add navigation, fetch logic, components, or backend behavior. No test suite was run.
+
+### Phase verification summary
+
+| Phase | Verification performed | Result |
+|---|---|---|
+| 1 — API exploration | Local backend `/health` and `/docs`, OpenAPI schemas, representative requests for proposed feature endpoints, and frontend fetch/proxy conventions | ✅ Verified 2026-10-15; evidence in `docs/feature-endpoint-map.md` |
+| 2 — TypeScript types | Compared proposed API/query shapes and constraints with the OpenAPI contract and endpoint map | ✅ Contract definitions added; not runtime-tested or integrated into app code |
+| 3 — Component specifications | Reviewed proposed component contracts against the feature specs, endpoint map, and data-contract boundaries | ✅ Specification added; no React components implemented |
+| 4 — Data contract index | Reviewed links and consolidated feature requirements against the phase artifacts | ✅ Index and cross-feature guidance added; no product code changed |
+
+No frontend or backend test/build/lint commands were run specifically for these four documentation commits, since they changed no application behavior. This statement is limited to this four-phase work and does not replace the separate Phase 3 verification results above for the earlier repository-rules work.
