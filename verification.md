@@ -127,3 +127,57 @@ Four skills under `/<skill-name>/SKILL.md`: `run-and-verify-stack`, `add-api-end
 ### Consistency updates
 
 Status notes claiming these directories were absent were corrected in `verification.md`, `.agents/rules/agent-workflow.md`, `memory-bank/techStack.md`, and `memory-bank/activeContext.md`.
+
+## SPEC-DRIVEN DEVELOPMENT — FOUR-PHASE DOCUMENTATION WORK
+
+The following four commits document the proposed dashboard features from API discovery through the consolidated frontend contract. They are planning and contract artifacts; they do **not** mean that the three features have been implemented in the application.
+
+### Phase 1 — Explore the API and resolve contract wording (`4d79d31`)
+
+**Verified:** 2026-10-15 against the local running backend (`GET /health` and `GET /docs` returned 200). Inspected `/openapi.json` and made representative GET requests for the three proposed dashboard features. Cross-checked frontend calls and proxy configuration in `frontend/src/App.tsx` and `frontend/vite.config.ts`.
+
+### Documentation updates
+
+- `docs/feature-endpoint-map.md` records endpoint paths, actual query parameter constraints/defaults, response model fields, representative response shapes, frontend fetch conventions, and the verification trail.
+- `docs/specs/01-dashboard-date-range-filter.md` clarifies that API dates are inclusive, facets supplies the unfiltered min/max dates, query strings omit blank values, and reversed ranges are rejected in the UI. The existing frontend convention uses the configured API base URL, `response.ok`, and JSON decoding.
+- `docs/specs/02-dashboard-anomaly-alerts.md` resolves `increase_ratio` as a ratio (multiply by 100 for display), specifies the inclusive `0.01`–`1.0` threshold bounds, strict comparison, preceding-three-period baseline, and date-range lookback behavior.
+- `docs/specs/03-b2b-b2c-comparison.md` resolves that `TopCategoryItem.total_amount` is category income only, not a group total; the selected strategy aggregates B2B/B2C movement lists to compute percentages and chart totals. Per-group categories come from that group's matching income movements, while facets provides global vocabulary only.
+
+### Current API mismatches retained as implementation requirements
+
+1. Alerts currently validates only `threshold >= 0`, and its baseline is the average of all earlier periods. Implementation must add the `0.01`–`1.0` bounds and rolling-three-period semantics.
+2. `GET /api/metrics/categories/top` returns `{category, operation_type, total_amount}` without group-total or percentage fields. The resolved spec therefore does not rely on this endpoint for the comparison view; it uses the B2B/B2C movement endpoints and client aggregation.
+3. `/api/metrics/facets` returns global `categories`, not a category list for each business type. The comparison view derives group-specific available categories from returned income movements.
+4. The current frontend has one fetch call, `GET /api/metrics`, and no multi-page routing; the comparison view spec calls for in-app navigation state, not a routing dependency.
+
+No application code was changed in this phase. Verification was contract/documentation-focused; test suites were not run because product code was not modified.
+
+### Phase 2 — Define TypeScript API and query types (`8c5669a`)
+
+- Added `frontend/specs/api-types.ts` for the facets, alerts, and top-category response payloads. It imports the shared movement-domain enums/types from `frontend/src/lib/financial-types.ts`, and keeps API payloads distinct from derived UI view models.
+- Added `frontend/specs/param-types.ts` for inclusive optional date bounds, alert threshold, and top-category query parameters. Comments record date format, defaults, and intended constraints.
+- These are feature-spec contract types, not runtime validation or types wired into the existing dashboard fetch flow. The response and query shapes were checked against the OpenAPI contract and the endpoint map; proposed feature requirements that differ from current API behavior are explicitly called out in the documentation.
+- No application code changed and no test suite was run for this documentation/type-definition phase.
+
+### Phase 3 — Specify dashboard component contracts (`26d906b`)
+
+- Added `frontend/specs/components.md` describing shared UI conventions and proposed component responsibilities for the date-range filter, home-page composition, anomaly alerts, and B2B/B2C comparison.
+- The component contracts specify draft-versus-applied filter behavior, API request ownership, loading/error/empty states, data aggregation responsibilities, and Spanish user-facing copy. They also preserve the chosen comparison strategy: aggregate income movement lists rather than depending on the top-category endpoint for group totals or percentages.
+- This file is a component-level implementation plan, not a set of implemented React components. No application code changed and no test suite was run.
+
+### Phase 4 — Consolidate frontend data contracts (`2a7c4c1`)
+
+- Added `frontend/specs/README.md` as the frontend specs index and cross-feature contract reference. It links the three product specs, endpoint map, shared domain types, API response types, query types, and component contracts.
+- It consolidates endpoint/query usage, request serialization and error-handling conventions, API-versus-derived-data boundaries, and edge cases for all three features. It also records the selected endpoint strategy and requirements where proposed behavior intentionally exceeds the current backend contract.
+- This phase is documentation-only; it does not add navigation, fetch logic, components, or backend behavior. No test suite was run.
+
+### Phase verification summary
+
+| Phase | Verification performed | Result |
+|---|---|---|
+| 1 — API exploration | Local backend `/health` and `/docs`, OpenAPI schemas, representative requests for proposed feature endpoints, and frontend fetch/proxy conventions | ✅ Verified 2026-10-15; evidence in `docs/feature-endpoint-map.md` |
+| 2 — TypeScript types | Compared proposed API/query shapes and constraints with the OpenAPI contract and endpoint map | ✅ Contract definitions added; not runtime-tested or integrated into app code |
+| 3 — Component specifications | Reviewed proposed component contracts against the feature specs, endpoint map, and data-contract boundaries | ✅ Specification added; no React components implemented |
+| 4 — Data contract index | Reviewed links and consolidated feature requirements against the phase artifacts | ✅ Index and cross-feature guidance added; no product code changed |
+
+No frontend or backend test/build/lint commands were run specifically for these four documentation commits, since they changed no application behavior. This statement is limited to this four-phase work and does not replace the separate Phase 3 verification results above for the earlier repository-rules work.
