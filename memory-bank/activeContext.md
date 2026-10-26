@@ -2,6 +2,22 @@
 
 _Last verified: 2026-10-09._
 
+## Skills installed and applied
+
+### `vercel-composition-patterns` (Vercel Labs) — applied
+- **Why**: React component architecture patterns to eliminate boolean prop proliferation. The old code drilled a `loading` boolean through 4 components (`KPICard`, `KPIRow`, `IncomeOutcomeChart`, `ProfitPercentChart`), forcing each to know about and render skeleton states.
+- **Pattern used**: `architecture-avoid-boolean-props` — lifted loading-state concern up to `App.tsx` (the orchestrator) using composition.
+- **Changes made**:
+  - Removed `loading` prop from `KPICard`, removed skeleton state, removed unused `Skeleton` import ✅
+  - Removed `loading` prop from `KPIRow`, added exported `KPIRowSkeleton` component for parent-use
+  - Removed `loading` prop from both charts (`IncomeOutcomeChart`, `ProfitPercentChart`), removed skeleton states
+  - `App.tsx` now owns the loading decision: `{loading ? <KPIRowSkeleton /> : metrics ? <KPIRow metrics={metrics} /> : null}`
+  - Tests: **17/17 green** | Build: ✅ | Lint: ✅
+
+### `performance-optimization` (Addy Osmani) — installed, not yet applied
+- **Why**: Comprehensive methodology (measure → identify → fix → verify → guard). Covers both frontend and backend. Backend opportunities: cached deterministic mock data (regenerated every request despite `random.seed(42)`), paginated list endpoints, lazy category calculations.
+- **Status**: SKILL.md + reference documentation placed in `.agents/skills/performance-optimization/`. Ready for a future session focused on perf.
+
 ## What works (verified this session)
 
 - **Full stack runs via `docker compose up --build`**: backend healthy (`GET /health` → 200), API serves 360 movements dated 2025-10-02..2026-09 (today-relative generator), frontend serves on :5173.

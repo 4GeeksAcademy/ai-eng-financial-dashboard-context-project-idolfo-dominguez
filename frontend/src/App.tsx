@@ -1,6 +1,6 @@
 import { Suspense, lazy, useEffect, useState } from "react";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
-import { KPIRow } from "@/components/dashboard/kpi-row";
+import { KPIRow, KPIRowSkeleton } from "@/components/dashboard/kpi-row";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -114,7 +114,7 @@ function App() {
           ) : null}
 
           <section aria-label="Key performance indicators">
-            <KPIRow metrics={metrics} loading={loading} />
+            {loading ? <KPIRowSkeleton /> : metrics ? <KPIRow metrics={metrics} /> : null}
           </section>
 
           <section
@@ -122,10 +122,10 @@ function App() {
             className="grid grid-cols-1 gap-4 xl:grid-cols-2"
           >
             <Suspense fallback={<ChartFallback />}>
-              <IncomeOutcomeChart data={monthlyData} loading={loading} />
+              <IncomeOutcomeChart data={monthlyData} />
             </Suspense>
             <Suspense fallback={<ChartFallback />}>
-              <ProfitPercentChart data={monthlyData} loading={loading} />
+              <ProfitPercentChart data={monthlyData} />
             </Suspense>
           </section>
         </div>
