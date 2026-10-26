@@ -1,14 +1,45 @@
-import { useEffect, useState } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import { KPIRow } from "@/components/dashboard/kpi-row";
-import { IncomeOutcomeChart } from "@/components/dashboard/income-outcome-chart";
-import { ProfitPercentChart } from "@/components/dashboard/profit-percent-chart";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   type FinancialMovement,
   type KPIMetrics,
   type MonthlyDataPoint,
 } from "@/lib/financial-types";
 import { computeKPIs, computeMonthlyData, computePeriodLabel } from "@/lib/financial-utils";
+
+// recharts is the largest dependency (~most of the main chunk). Lazy-load the
+// chart components so recharts is code-split into its own async chunk instead
+// of blocking first paint (vercel-react-best-practices: bundle-dynamic-imports).
+const IncomeOutcomeChart = lazy(() =>
+  import("@/components/dashboard/income-outcome-chart").then((m) => ({
+    default: m.IncomeOutcomeChart,
+  })),
+);
+
+const ProfitPercentChart = lazy(() =>
+  import("@/components/dashboard/profit-percent-chart").then((m) => ({
+    default: m.ProfitPercentChart,
+  })),
+);
+
+// Matches the chart cards' loading skeleton so layout doesn't shift while the
+// recharts chunk loads.
+function ChartFallback() {
+  return (
+    <Card className="border-border/60">
+      <CardHeader className="pb-4">
+        <Skeleton className="h-5 w-52" />
+        <Skeleton className="h-3 w-64 mt-1" />
+      </CardHeader>
+      <CardContent>
+        <Skeleton className="h-[280px] w-full rounded-lg" />
+      </CardContent>
+    </Card>
+  );
+}
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "";
 
@@ -20,6 +51,17 @@ async function fetchFinancialData(): Promise<FinancialMovement[]> {
   return response.json();
 }
 
+// Warm up the lazily-loaded chart chunks in parallel with the data fetch so the
+// heavy recharts chunk downloads while /api/metrics is in flight instead of
+// serially after it (vercel-react-best-practices: bundle-preload, async-parallel).
+// The dynamic import urls here match React.lazy's factories above, so the module
+// is fetched once and the lazy() render reuses the cached chunk.
+function preloadCharts() {
+  if (typeof window === "undefined") return;
+  void import("@/components/dashboard/income-outcome-chart");
+  void import("@/components/dashboard/profit-percent-chart");
+}
+
 function App() {
   const [metrics, setMetrics] = useState<KPIMetrics | null>(null);
   const [monthlyData, setMonthlyData] = useState<MonthlyDataPoint[]>([]);
@@ -28,6 +70,9 @@ function App() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Start the lazy chart chunks downloading in parallel with the API call.
+    preloadCharts();
+
     fetchFinancialData()
       .then((movements) => {
         setMetrics(computeKPIs(movements));
@@ -76,8 +121,12 @@ function App() {
             aria-label="Financial charts"
             className="grid grid-cols-1 gap-4 xl:grid-cols-2"
           >
-            <IncomeOutcomeChart data={monthlyData} loading={loading} />
-            <ProfitPercentChart data={monthlyData} loading={loading} />
+            <Suspense fallback={<ChartFallback />}>
+              <IncomeOutcomeChart data={monthlyData} loading={loading} />
+            </Suspense>
+            <Suspense fallback={<ChartFallback />}>
+              <ProfitPercentChart data={monthlyData} loading={loading} />
+            </Suspense>
           </section>
         </div>
       </div>

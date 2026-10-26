@@ -5,7 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { IncomeOutcomeChart } from "@/components/dashboard/income-outcome-chart";
 import { ProfitPercentChart } from "@/components/dashboard/profit-percent-chart";
-import type { MonthlyDataPoint } from "@/lib/financial-types";
+import type { FinancialMovement, MonthlyDataPoint } from "@/lib/financial-types";
 
 // ResponsiveContainer and LineChart need real layout measurement that jsdom
 // cannot provide, so recharts renders nothing in tests. We stub them to spread
@@ -26,6 +26,24 @@ vi.mock("recharts", async (importOriginal) => {
 
 const sampleData: MonthlyDataPoint[] = [
   { month: "Jan", income: 1000, outcome: 250, profitPercent: 75 },
+];
+
+// Two movements so computeKPIs/computeMonthlyData produce real KPI + chart data.
+const sampleMovements: FinancialMovement[] = [
+  {
+    create_date: "2025-01-15",
+    amount: 1000,
+    operation_type: "income",
+    category: "sales",
+    business_type: "B2B",
+  },
+  {
+    create_date: "2025-01-20",
+    amount: 250,
+    operation_type: "outcome",
+    category: "suppliers",
+    business_type: "B2B",
+  },
 ];
 
 describe("accessibility", () => {
@@ -75,5 +93,29 @@ describe("accessibility", () => {
     render(<App />);
     const alert = await screen.findByRole("alert");
     expect(alert).toHaveTextContent(/No se pudo cargar la informacion/i);
+  });
+
+  it("renders both charts through Suspense after the API resolves", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+      new Response(JSON.stringify(sampleMovements), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+
+    render(<App />);
+
+    // Both lazily-loaded chart components must appear with their accessible
+    // labels once the API data arrives and Suspense resolves.
+    expect(
+      await screen.findByRole("img", {
+        name: "Income vs Outcome line chart showing monthly revenue and expenditure",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("img", {
+        name: "Profit margin percentage line chart by month",
+      }),
+    ).toBeInTheDocument();
   });
 });
