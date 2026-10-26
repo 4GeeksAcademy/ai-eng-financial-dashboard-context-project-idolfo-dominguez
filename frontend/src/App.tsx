@@ -50,8 +50,20 @@ function App() {
         <div className="flex flex-col gap-8">
           <DashboardHeader period={period} />
 
+          {/* Visually hidden live region announces async content changes to screen readers (WCAG 4.1.3) */}
+          <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+            {loading
+              ? "Loading financial dashboard data"
+              : error
+                ? "Failed to load financial dashboard data"
+                : "Financial dashboard data loaded"}
+          </p>
+
           {error ? (
-            <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive-foreground">
+            <div
+              role="alert"
+              className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive-foreground"
+            >
               {error}
             </div>
           ) : null}
