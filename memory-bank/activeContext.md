@@ -18,6 +18,13 @@ _Last verified: 2026-10-09._
 - **Why**: Comprehensive methodology (measure → identify → fix → verify → guard). Covers both frontend and backend. Backend opportunities: cached deterministic mock data (regenerated every request despite `random.seed(42)`), paginated list endpoints, lazy category calculations.
 - **Status**: SKILL.md + reference documentation placed in `.agents/skills/performance-optimization/`. Ready for a future session focused on perf.
 
+### `dashboard-display-conventions` — **custom skill**, created for repo-specific gap
+- **Problem identified**: Community skills (React, composition, accessibility, perf) are all generic guidance. None encode this dashboard's **specific data-formatting & display conventions** — the exact currency/percent/date formatting, variant color mappings, helper text patterns, date-only-string handling, and KPI row composition patterns discovered in this codebase.
+- **Gap documented via subagent verification**: the initial skill draft had 9 gaps (hard-coded 4-card row, no skeleton sync guidance, missing Spanish glossary, no icon conventions, no test-maintenance pattern, pre-existing English-vs-Spanish drift, etc.) — all fixed in v2.
+- **Location**: `.skills/dashboard-display-conventions/SKILL.md` (source) and `.agents/skills/dashboard-display-conventions/` (installed copy)
+- **Scope**: Number/currency formatting (§A), date/period label conventions (§B), KPI card display conventions (§C), chart display conventions (§D), language & copy (§E), component composition & loading (§F), extending types & test maintenance (§G)
+- **Status**: Installed, verified via subagent, refined to address all gaps found
+
 ## What works (verified this session)
 
 - **Full stack runs via `docker compose up --build`**: backend healthy (`GET /health` → 200), API serves 360 movements dated 2025-10-02..2026-09 (today-relative generator), frontend serves on :5173.

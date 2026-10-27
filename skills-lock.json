@@ -7,6 +7,13 @@
       "skillPath": "skills/accessibility/SKILL.md",
       "computedHash": "612f913bcb03f0787b103c848cd7664b676a9aaf31f25d3270cc69cf5caaab95"
     },
+    "dashboard-display-conventions": {
+      "source": "file:///workspaces/ai-eng-financial-dashboard-context-project-idolfo-dominguez/.skills/dashboard-display-conventions",
+      "sourceUrl": "file:///workspaces/ai-eng-financial-dashboard-context-project-idolfo-dominguez/.skills/dashboard-display-conventions",
+      "sourceType": "git",
+      "skillPath": "SKILL.md",
+      "computedHash": "eecaffda37b6854004b41dd32d1b65c4d991de7a96b3d0636ecd109364a509de"
+    },
     "performance-optimization": {
       "source": "addyosmani/agent-skills",
       "sourceType": "github",
